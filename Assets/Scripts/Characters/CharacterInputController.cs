@@ -59,7 +59,7 @@ public class CharacterInputController : MonoBehaviour
     protected float m_JumpStart;
     protected bool m_Jumping;
 
-	protected bool m_Sliding;
+	public bool m_Sliding;
 	protected float m_SlideStart;
 
 	protected AudioSource m_Audio;
@@ -119,9 +119,10 @@ public class CharacterInputController : MonoBehaviour
 	// Called at the beginning of a run or rerun
 	public void Begin()
 	{
+		HandDataReceiver.instance.IsGameStarted = true;
 		m_IsRunning = false;
         character.animator.SetBool(s_DeadHash, false);
-
+		
 		characterCollider.Init ();
 
 		m_ActiveConsumables.Clear();
@@ -168,7 +169,7 @@ public class CharacterInputController : MonoBehaviour
         }
     }
 
-    protected bool TutorialMoveCheck(int tutorialLevel)
+    public bool TutorialMoveCheck(int tutorialLevel)
     {
         tutorialWaitingForValidation = currentTutorialLevel != tutorialLevel;
 
@@ -177,11 +178,6 @@ public class CharacterInputController : MonoBehaviour
 
 	protected void Update ()
     {
-#if UNITY_EDITOR || UNITY_STANDALONE
-        // Use key input in editor or standalone
-        // disabled if it's tutorial and not the current right tutorial level (see func TutorialMoveCheck)
-        Debug.Log(1);
-        
         if (Input.GetKeyDown(KeyCode.LeftArrow) && TutorialMoveCheck(0))
         {
             ChangeLane(-1);
@@ -199,60 +195,7 @@ public class CharacterInputController : MonoBehaviour
 			if(!m_Sliding)
 				Slide();
 		}
-#else
-        // Use touch input on mobile
-        if (Input.touchCount == 1)
-        {
-			if(m_IsSwiping)
-			{
-				Vector2 diff = Input.GetTouch(0).position - m_StartingTouch;
-
-				// Put difference in Screen ratio, but using only width, so the ratio is the same on both
-                // axes (otherwise we would have to swipe more vertically...)
-				diff = new Vector2(diff.x/Screen.width, diff.y/Screen.width);
-
-				if(diff.magnitude > 0.01f) //we set the swip distance to trigger movement to 1% of the screen width
-				{
-					if(Mathf.Abs(diff.y) > Mathf.Abs(diff.x))
-					{
-						if(TutorialMoveCheck(2) && diff.y < 0)
-						{
-							Slide();
-						}
-						else if(TutorialMoveCheck(1))
-						{
-							Jump();
-						}
-					}
-					else if(TutorialMoveCheck(0))
-					{
-						if(diff.x < 0)
-						{
-							ChangeLane(-1);
-						}
-						else
-						{
-							ChangeLane(1);
-						}
-					}
-						
-					m_IsSwiping = false;
-				}
-            }
-
-        	// Input check is AFTER the swip test, that way if TouchPhase.Ended happen a single frame after the Began Phase
-			// a swipe can still be registered (otherwise, m_IsSwiping will be set to false and the test wouldn't happen for that began-Ended pair)
-			if(Input.GetTouch(0).phase == TouchPhase.Began)
-			{
-				m_StartingTouch = Input.GetTouch(0).position;
-				m_IsSwiping = true;
-			}
-			else if(Input.GetTouch(0).phase == TouchPhase.Ended)
-			{
-				m_IsSwiping = false;
-			}
-        }
-#endif
+        
         Vector3 verticalTargetPosition = m_TargetPosition;
 
 		if (m_Sliding)

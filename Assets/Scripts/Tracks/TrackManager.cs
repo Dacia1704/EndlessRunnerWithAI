@@ -45,7 +45,7 @@ public class TrackManager : MonoBehaviour
     public int speedStep = 4;
     public float laneOffset = 1.0f;
 
-    public bool invincible = false;
+    public bool invincible = true;
 
     [Header("Objects")]
     public ConsumableDatabase consumableDatabase;
